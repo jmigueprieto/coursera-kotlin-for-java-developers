@@ -4,32 +4,78 @@ package taxipark
  * Task #1. Find all the drivers who performed no trips.
  */
 fun TaxiPark.findFakeDrivers(): Set<Driver> =
-        TODO()
+        //allDrivers.filter { d -> trips.none { t -> d == t.driver } }.toSet()
+        allDrivers - trips.map { it.driver }
 
 /*
  * Task #2. Find all the clients who completed at least the given number of trips.
  */
 fun TaxiPark.findFaithfulPassengers(minTrips: Int): Set<Passenger> =
-        TODO()
+        allPassengers.filter { p ->
+            trips.count { t -> p in t.passengers } >= minTrips
+        }.toSet()
+/*trips
+        .flatMap(Trip::passengers)
+        .groupBy { passenger -> passenger }
+        .filterValues { group -> group.size >= minTrips }
+        .keys // fails test5*/
+
 
 /*
  * Task #3. Find all the passengers, who were taken by a given driver more than once.
  */
 fun TaxiPark.findFrequentPassengers(driver: Driver): Set<Passenger> =
-        TODO()
+        allPassengers.filter { p ->
+            trips.filter { t ->
+                t.driver == driver && p in t.passengers
+            }.count() > 1
+        }.toSet()
 
 /*
  * Task #4. Find the passengers who had a discount for majority of their trips.
  */
 fun TaxiPark.findSmartPassengers(): Set<Passenger> =
-        TODO()
+        allPassengers.filter { p ->
+            trips.count { t ->
+                p in t.passengers && t.discount != null
+            } > trips.count { t ->
+                p in t.passengers && t.discount == null
+            }
+        }.toSet()
+/* allPassengers.associate { p ->
+     p to trips.filter { t -> p in t.passengers }
+ }
+ .also { println(it)}
+ .filterValues { group ->
+     val (withDiscount, withoutDiscount) = group.partition { it.discount != null }
+     withDiscount.size > withoutDiscount.size
+ }.keys*/
+
 
 /*
  * Task #5. Find the most frequent trip duration among minute periods 0..9, 10..19, 20..29, and so on.
  * Return any period if many are the most frequent, return `null` if there're no trips.
  */
 fun TaxiPark.findTheMostFrequentTripDurationPeriod(): IntRange? {
-    return TODO()
+    if (trips.isEmpty())
+        return null
+
+    /* val maxDuration = trips.maxBy { it.duration }!!.duration
+
+     val minutesToTripCount = (0..maxDuration step 10).map { minute ->
+         minute to trips.count { it.duration in minute..(minute + 9) }
+     }
+
+     val minute = minutesToTripCount.maxBy { it.second }!!.first
+
+     return minute..(minute + 9)*/
+
+    return trips.groupBy {
+        val start = it.duration / 10 * 10
+        val end = start + 9
+        start..end
+    }.maxBy { (_, group) -> group.size }?.key
+
 }
 
 /*
@@ -37,5 +83,19 @@ fun TaxiPark.findTheMostFrequentTripDurationPeriod(): IntRange? {
  * Check whether 20% of the drivers contribute 80% of the income.
  */
 fun TaxiPark.checkParetoPrinciple(): Boolean {
-    TODO()
+    if (trips.isEmpty())
+        return false
+
+    val totalIncome = trips.sumByDouble { it.cost }
+    val totalDrivers = allDrivers.size
+
+    val top20Income = trips
+            .asSequence()
+            .groupBy { it.driver }
+            .map { (_, tripsByDriver) -> tripsByDriver.sumByDouble { it.cost } }
+            .sortedByDescending { it }
+            .take((totalDrivers * 0.2).toInt())
+            .sumByDouble { it }
+
+    return (top20Income / totalIncome) >= 0.8
 }
