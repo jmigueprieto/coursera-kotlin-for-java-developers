@@ -3,9 +3,7 @@ package taxipark
 /*
  * Task #1. Find all the drivers who performed no trips.
  */
-fun TaxiPark.findFakeDrivers(): Set<Driver> =
-        //allDrivers.filter { d -> trips.none { t -> d == t.driver } }.toSet()
-        allDrivers - trips.map { it.driver }
+fun TaxiPark.findFakeDrivers(): Set<Driver> = allDrivers - trips.map { it.driver }
 
 /*
  * Task #2. Find all the clients who completed at least the given number of trips.
@@ -14,12 +12,6 @@ fun TaxiPark.findFaithfulPassengers(minTrips: Int): Set<Passenger> =
         allPassengers.filter { p ->
             trips.count { t -> p in t.passengers } >= minTrips
         }.toSet()
-/*trips
-        .flatMap(Trip::passengers)
-        .groupBy { passenger -> passenger }
-        .filterValues { group -> group.size >= minTrips }
-        .keys // fails test5*/
-
 
 /*
  * Task #3. Find all the passengers, who were taken by a given driver more than once.
@@ -42,14 +34,6 @@ fun TaxiPark.findSmartPassengers(): Set<Passenger> =
                 p in t.passengers && t.discount == null
             }
         }.toSet()
-/* allPassengers.associate { p ->
-     p to trips.filter { t -> p in t.passengers }
- }
- .also { println(it)}
- .filterValues { group ->
-     val (withDiscount, withoutDiscount) = group.partition { it.discount != null }
-     withDiscount.size > withoutDiscount.size
- }.keys*/
 
 
 /*
@@ -59,16 +43,6 @@ fun TaxiPark.findSmartPassengers(): Set<Passenger> =
 fun TaxiPark.findTheMostFrequentTripDurationPeriod(): IntRange? {
     if (trips.isEmpty())
         return null
-
-    /* val maxDuration = trips.maxBy { it.duration }!!.duration
-
-     val minutesToTripCount = (0..maxDuration step 10).map { minute ->
-         minute to trips.count { it.duration in minute..(minute + 9) }
-     }
-
-     val minute = minutesToTripCount.maxBy { it.second }!!.first
-
-     return minute..(minute + 9)*/
 
     return trips.groupBy {
         val start = it.duration / 10 * 10
